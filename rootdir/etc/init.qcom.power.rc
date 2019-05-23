@@ -93,6 +93,10 @@ on property:vendor.setup.power=1
 on property:init.svc.recovery=running
     trigger enable-low-power
 
+on boot
+    # Enable suspend to idle mode to reduce latency during suspend/resume
+    write /sys/power/mem_sleep "s2idle"
+
 on early-init
     # Disable UFS clock scaling
     write /sys/bus/platform/devices/${ro.boot.bootdevice}/clkscale_enable 0
