@@ -44,6 +44,18 @@ on init
     symlink /dev/block/platform/soc/${ro.boot.bootdevice} /dev/block/bootdevice
     start vendor.qseecomd
 
+    # Boot time fs tuning
+    write /sys/block/sda/queue/iostats 0
+    write /sys/block/sda/queue/scheduler cfq
+    write /sys/block/sda/queue/iosched/slice_idle 0
+    write /sys/block/sda/queue/read_ahead_kb 2048
+    write /sys/block/sda/queue/nr_requests 256
+    write /sys/block/sde/queue/iostats 0
+    write /sys/block/sde/queue/scheduler cfq
+    write /sys/block/sde/queue/iosched/slice_idle 0
+    write /sys/block/sde/queue/read_ahead_kb 2048
+    write /sys/block/sde/queue/nr_requests 256
+
     # ZRAM setup
     write /sys/block/zram0/comp_algorithm lz4
     write /sys/block/zram0/max_comp_streams 8
@@ -94,7 +106,6 @@ on post-fs-data
     chmod 0644 /dev/elliptic1
 
 on boot
-    write /dev/cpuset/audio-app/cpus 1-2
     chown system system /sys/class/drm/card0-DSI-1/disp_param
     chmod 0664 /sys/class/drm/card0-DSI-1/disp_param
     chown system system /sys/class/drm/card0-DSI-1/mipi_reg
@@ -120,6 +131,19 @@ on boot
     chown system system /dev/stune/top-app/cgroup.procs
     chmod 0666 /dev/stune/background/cgroup.procs
     chmod 0666 /dev/stune/top-app/cgroup.procs
+
+on property:sys.boot_completed=1
+    # Runtime fs tuning
+    write /sys/block/sda/queue/read_ahead_kb 128
+    write /sys/block/sda/queue/nr_requests 128
+    write /sys/block/sda/queue/iostats 1
+    write /sys/block/sde/queue/read_ahead_kb 128
+    write /sys/block/sde/queue/nr_requests 128
+    write /sys/block/sde/queue/iostats 1
+
+    # First setup runtime cpusets only for silver cpus
+    write /dev/cpuset/top-app/cpus 0-3
+    write /dev/cpuset/audio-app/cpus 1-2
 
     # DT2W
     chown system system /proc/tp_gesture
