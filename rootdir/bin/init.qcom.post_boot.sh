@@ -96,83 +96,10 @@ function configure_memory_parameters() {
             vmpres_file_min=$((minfree_5 + (minfree_5 - rem_minfree_4)))
             echo $vmpres_file_min > /sys/module/lowmemorykiller/parameters/vmpressure_file_min
         else
-    # Set LMK series, vmpressure_file_min for 32 bit non-go targets.
-    # Disable Core Control, enable KLMK for non-go 8909.
-            if [ "$ProductName" == "msm8909" ]; then
-                disable_core_ctl
-                echo 1 > /sys/module/lowmemorykiller/parameters/enable_lmk
-            fi
-        echo "15360,19200,23040,26880,34415,43737" > /sys/module/lowmemorykiller/parameters/minfree
-        echo 53059 > /sys/module/lowmemorykiller/parameters/vmpressure_file_min
-        fi
-
-    # Enable adaptive LMK for all targets &
-    # use Google default LMK series for all 64-bit targets >=2GB.
-        echo 1 > /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk
-
-    # Enable oom_reaper
-        if [ -f /sys/module/lowmemorykiller/parameters/oom_reaper ]; then
-            echo 1 > /sys/module/lowmemorykiller/parameters/oom_reaper
-        fi
-
-        if [[ "$ProductName" != "bengal"* ]]; then
-            #bengal has appcompaction enabled. So not needed
-            # Set PPR parameters for other targets
-            if [ -f /sys/devices/soc0/soc_id ]; then
-                soc_id=`cat /sys/devices/soc0/soc_id`
-            else
-                soc_id=`cat /sys/devices/system/soc/soc0/id`
-            fi
-
-            case "$soc_id" in
-              # Do not set PPR parameters for premium targets
-              # sdm845 - 321, 341
-              # msm8998 - 292, 319
-              # msm8996 - 246, 291, 305, 312
-              "321" | "341" | "292" | "319" | "246" | "291" | "305" | "312")
-                ;;
-              *)
-                #Set PPR parameters for all other targets.
-                echo $set_almk_ppr_adj > /sys/module/process_reclaim/parameters/min_score_adj
-                echo 0 > /sys/module/process_reclaim/parameters/enable_process_reclaim
-                echo 50 > /sys/module/process_reclaim/parameters/pressure_min
-                echo 70 > /sys/module/process_reclaim/parameters/pressure_max
-                echo 30 > /sys/module/process_reclaim/parameters/swap_opt_eff
-                echo 512 > /sys/module/process_reclaim/parameters/per_swap_size
-                ;;
-            esac
-        fi
-    fi
-
-    if [[ "$ProductName" == "bengal"* ]]; then
-        #Set PPR nomap parameters for bengal targets
-        echo 1 > /sys/module/process_reclaim/parameters/enable_process_reclaim
-        echo 50 > /sys/module/process_reclaim/parameters/pressure_min
-        echo 70 > /sys/module/process_reclaim/parameters/pressure_max
-        echo 30 > /sys/module/process_reclaim/parameters/swap_opt_eff
-        echo 0 > /sys/module/process_reclaim/parameters/per_swap_size
-        echo 7680 > /sys/module/process_reclaim/parameters/tsk_nomap_swap_sz
-    fi
-
-    # Set allocstall_threshold to 0 for all targets.
-    # Set swappiness to 100 for all targets
-    echo 0 > /sys/module/vmpressure/parameters/allocstall_threshold
-
-    # Disable wsf for all targets beacause we are using efk.
-    # wsf Range : 1..1000 So set to bare minimum value 1.
-    echo 1 > /proc/sys/vm/watermark_scale_factor
-
-    # Disable the feature of watermark boost
-    MemTotalStr=`cat /proc/meminfo | grep MemTotal`
-    MemTotal=${MemTotalStr:16:8}
-
-    if [ $MemTotal -le 6291456 ]; then
-        echo 0 > /proc/sys/vm/watermark_boost_factor
     fi
 
     configure_read_ahead_kb_values
 
-fi
 }
 
 case "$target" in
@@ -191,59 +118,6 @@ case "$target" in
 
         case "$soc_id" in
                  "417" | "420" | "444" | "445" | "469" | "470" )
-
-            # Core control is temporarily disabled till bring up
-            echo 0 > /sys/devices/system/cpu/cpu0/core_ctl/enable
-            echo 2 > /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
-            # Core control parameters on big
-            echo 40 > /sys/devices/system/cpu/cpu4/core_ctl/busy_down_thres
-            echo 60 > /sys/devices/system/cpu/cpu4/core_ctl/busy_up_thres
-            echo 100 > /sys/devices/system/cpu/cpu4/core_ctl/offline_delay_ms
-            echo 4 > /sys/devices/system/cpu/cpu4/core_ctl/task_thres
-
-            # Setting b.L scheduler parameters
-            echo 67 > /proc/sys/kernel/sched_downmigrate
-            echo 77 > /proc/sys/kernel/sched_upmigrate
-            echo 85 > /proc/sys/kernel/sched_group_downmigrate
-            echo 100 > /proc/sys/kernel/sched_group_upmigrate
-
-            # cpuset settings
-            echo 0-3 > /dev/cpuset/background/cpus
-            echo 0-3 > /dev/cpuset/system-background/cpus
-
-
-            # configure governor settings for little cluster
-            echo "schedutil" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-            echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us
-            echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us
-            echo 1305600 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/hispeed_freq
-            echo 614400 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
-            echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/rtg_boost_freq
-
-            # configure governor settings for big cluster
-            echo "schedutil" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_governor
-            echo 0 > /sys/devices/system/cpu/cpu4/cpufreq/schedutil/up_rate_limit_us
-            echo 0 > /sys/devices/system/cpu/cpu4/cpufreq/schedutil/down_rate_limit_us
-            echo 1401600 > /sys/devices/system/cpu/cpu4/cpufreq/schedutil/hispeed_freq
-            echo 1056000 > /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq
-            echo 0 > /sys/devices/system/cpu/cpu4/cpufreq/schedutil/rtg_boost_freq
-
-            echo "0:1017600" > /sys/devices/system/cpu/cpu_boost/input_boost_freq
-            echo 80 > /sys/devices/system/cpu/cpu_boost/input_boost_ms
-
-	    echo 1 > /proc/sys/kernel/sched_walt_rotate_big_tasks
-
-            # sched_load_boost as -6 is equivalent to target load as 85. It is per cpu tunable.
-            echo -6 >  /sys/devices/system/cpu/cpu0/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu1/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu2/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu3/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu4/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu5/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu6/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu7/sched_load_boost
-            echo 85 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/hispeed_load
-            echo 85 > /sys/devices/system/cpu/cpu4/cpufreq/schedutil/hispeed_load
 
             # Set Memory parameters
             configure_memory_parameters
@@ -303,61 +177,6 @@ case "$target" in
         case "$soc_id" in
                  "518" )
 
-            # Core control parameters on big
-            echo 0 > /sys/devices/system/cpu/cpu0/core_ctl/enable
-            echo 2 > /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
-            echo 40 > /sys/devices/system/cpu/cpu4/core_ctl/busy_down_thres
-            echo 60 > /sys/devices/system/cpu/cpu4/core_ctl/busy_up_thres
-            echo 100 > /sys/devices/system/cpu/cpu4/core_ctl/offline_delay_ms
-            echo 4 > /sys/devices/system/cpu/cpu4/core_ctl/task_thres
-
-            # Setting b.L scheduler parameters
-            echo 65 > /proc/sys/kernel/sched_downmigrate
-            echo 71 > /proc/sys/kernel/sched_upmigrate
-            echo 85 > /proc/sys/kernel/sched_group_downmigrate
-            echo 100 > /proc/sys/kernel/sched_group_upmigrate
-
-            # cpuset settings
-            echo 0-2     > /dev/cpuset/background/cpus
-            echo 0-3     > /dev/cpuset/system-background/cpus
-            echo 4-7     > /dev/cpuset/foreground/boost/cpus
-            echo 0-2,4-7 > /dev/cpuset/foreground/cpus
-            echo 0-7     > /dev/cpuset/top-app/cpus
-
-
-            # configure governor settings for little cluster
-            echo "schedutil" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-            echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us
-            echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us
-            echo 1516800 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/hispeed_freq
-            echo 691200 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
-            echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/rtg_boost_freq
-
-            # configure governor settings for big cluster
-            echo "schedutil" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_governor
-            echo 0 > /sys/devices/system/cpu/cpu4/cpufreq/schedutil/up_rate_limit_us
-            echo 0 > /sys/devices/system/cpu/cpu4/cpufreq/schedutil/down_rate_limit_us
-            echo 1344000 > /sys/devices/system/cpu/cpu4/cpufreq/schedutil/hispeed_freq
-            echo 1056000 > /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq
-            echo 0 > /sys/devices/system/cpu/cpu4/cpufreq/schedutil/rtg_boost_freq
-
-            echo "0:1190000" > /sys/devices/system/cpu/cpu_boost/input_boost_freq
-            echo 120 > /sys/devices/system/cpu/cpu_boost/input_boost_ms
-
-	    echo 1 > /proc/sys/kernel/sched_walt_rotate_big_tasks
-
-            # sched_load_boost as -6 is equivalent to target load as 85. It is per cpu tunable.
-            echo -6 >  /sys/devices/system/cpu/cpu0/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu1/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu2/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu3/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu4/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu5/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu6/sched_load_boost
-            echo -6 >  /sys/devices/system/cpu/cpu7/sched_load_boost
-            echo 85 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/hispeed_load
-            echo 85 > /sys/devices/system/cpu/cpu4/cpufreq/schedutil/hispeed_load
-
             # Set Memory parameters
             configure_memory_parameters
 
@@ -404,25 +223,6 @@ case "$target" in
         # Scuba perf/power tunings
         case "$soc_id" in
              "441" | "471" | "473" | "474" )
-
-            # Quad-core device. disable core_ctl
-            echo 0 > /sys/devices/system/cpu/cpu0/core_ctl/enable
-
-            # Configure schedutil governor settings
-            echo "schedutil" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-            echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us
-            echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us
-            echo 1305600 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/hispeed_freq
-            echo 614400 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
-            echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/rtg_boost_freq
-
-            # sched_load_boost as -6 is equivalent to target load as 85.
-            echo 0 > /proc/sys/kernel/sched_boost
-            echo -6 > /sys/devices/system/cpu/cpu0/sched_load_boost
-            echo -6 > /sys/devices/system/cpu/cpu1/sched_load_boost
-            echo -6 > /sys/devices/system/cpu/cpu2/sched_load_boost
-            echo -6 > /sys/devices/system/cpu/cpu3/sched_load_boost
-            echo 85 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/hispeed_load
 
             # Set Memory parameters
             configure_memory_parameters
