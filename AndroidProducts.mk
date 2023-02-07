@@ -5,9 +5,9 @@
 #
 
 PRODUCT_MAKEFILES := \
-    $(LOCAL_DIR)/nad_fog.mk
+    $(LOCAL_DIR)/evolution_fog.mk
 
 COMMON_LUNCH_CHOICES := \
-    nad_fog-user \
-    nad_fog-userdebug \
-    nad_fog-eng
+    evolution_fog-user \
+    evolution_fog-userdebug \
+    evolution_fog-eng
