@@ -13,6 +13,7 @@ $(call inherit-product, vendor/arrow/config/common.mk)
 
 # Inherit from fog device
 $(call inherit-product, device/xiaomi/fog/device.mk)
+TARGET_SUPPORTS_QUICK_TAP := false
 
 PRODUCT_NAME := arrow_fog
 PRODUCT_DEVICE := fog
