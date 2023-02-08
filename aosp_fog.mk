@@ -13,6 +13,7 @@ $(call inherit-product, vendor/aosp/config/common_full_phone.mk)
 
 # Inherit from fog device
 $(call inherit-product, device/xiaomi/fog/device.mk)
+TARGET_SUPPORTS_QUICK_TAP := false
 
 PRODUCT_NAME := aosp_fog
 PRODUCT_DEVICE := fog
