@@ -787,8 +787,4 @@
     
     <!-- Enable Zram writeback feature to allow unused pages in zram be written to flash. -->
     <bool name="config_zramWriteback">true</bool>
-
-    <!-- disable burn-in protection -->
-    <bool name="config_disableStatusBarBurnInProtection">true</bool>
-    <bool name="config_enableBurnInProtection">false</bool>
 </resources>
