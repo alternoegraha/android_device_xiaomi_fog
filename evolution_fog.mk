@@ -14,7 +14,7 @@ $(call inherit-product, vendor/evolution/config/common_full_phone.mk)
 # Inherit from fog device
 $(call inherit-product, device/xiaomi/fog/device.mk)
 TARGET_BOOT_ANIMATION_RES := 720
-TARGET_SUPPORTS_QUICK_TAP := true
+TARGET_SUPPORTS_QUICK_TAP := false
 TARGET_USES_MINI_GAPPS := true
 
 PRODUCT_NAME := evolution_fog
