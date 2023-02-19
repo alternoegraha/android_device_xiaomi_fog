@@ -260,8 +260,6 @@ on post-fs-data
 on property:sys.boot_completed=1
     chown media audio /sys/kernel/aud_dev/state
 
-    start vendor.qcom-post-boot
-
 service vendor.qrtr-ns /vendor/bin/qrtr-ns -f
     class core
     user vendor_qrtr
@@ -309,13 +307,6 @@ service vendor.qcom-sh /vendor/bin/init.qcom.sh
     class late_start
     user root
     group root system radio
-    oneshot
-
-service vendor.qcom-post-boot /vendor/bin/init.qcom.post_boot.sh
-    class late_start
-    user root
-    group root system wakelock graphics
-    disabled
     oneshot
 
 on property:ro.vendor.ril.mbn_copy_completed=1
