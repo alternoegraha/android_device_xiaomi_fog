@@ -47,6 +47,9 @@ genfscon sysfs /devices/platform/soc/soc:silead_fp                              
 # kmsg
 genfscon proc /last_kmsg                                                        u:object_r:proc_last_kmsg:s0
 
+# Power
+genfscon proc /sys/kernel/sched_energy_aware                                    u:object_r:proc_sched_energy_aware:s0
+
 # UFS
 genfscon sysfs /devices/platform/soc/4804000.ufshc/clkgate_enable               u:object_r:vendor_sysfs_scsi_host:s0
 
